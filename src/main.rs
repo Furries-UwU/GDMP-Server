@@ -1,10 +1,18 @@
 extern crate enet;
 
+use std::fs::File;
+use std::io::Write;
 use std::net::Ipv4Addr;
 use std::time::Duration;
 
 use anyhow::Context;
 use enet::*;
+use prost::DecodeError;
+
+// protocol stuff
+pub mod gdmp {
+    include!(concat!(env!("OUT_DIR"), "/gdmp.rs"));
+}
 
 fn main() -> anyhow::Result<()> {
     let enet = Enet::new().context("could not initialize ENet")?;
@@ -22,26 +30,37 @@ fn main() -> anyhow::Result<()> {
         .context("could not create host")?;
 
     loop {
-        let evnt = host.service(Duration::from_micros(1000)).context("service failed")?;
+        let evnt = host
+            .service(Duration::from_micros(1000))
+            .context("service failed")?;
         if evnt.is_none() {
             continue;
         }
-        println!("received event: {:#?}", evnt);
+        //println!("received event: {:#?}", evnt);
 
         let evnt = evnt.unwrap();
         match evnt.kind() {
             EventKind::Connect => println!("new connection!"),
-            EventKind::Disconnect{..} => println!("disconnect!"),
+            EventKind::Disconnect { .. } => println!("disconnect!"),
             EventKind::Receive {
-                     channel_id,
-                     ref packet,
-                     ..
-                 } => println!(
-                "got packet on channel {}, content: '{}'",
                 channel_id,
-                std::str::from_utf8(packet.data()).unwrap()
-            ),
-            _ => (),
+                ref packet
+            } => {
+                let data = packet.data();
+                println!("got packet on channel {}, size {}", channel_id, data.len());
+
+                let packet:Result<gdmp::Packet, DecodeError> = prost::Message::decode(data);
+                if packet.is_err() {
+                    println!("error decoding packet: {:?}", packet);
+                    println!("data: {:?}", data);
+                    continue;
+                }
+
+                println!("packet: {:#?}", packet);
+                // save to file
+                let mut file = File::create("test2")?;
+                file.write_all(data)?;
+            }
         }
     }
 }
