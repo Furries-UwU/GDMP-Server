@@ -1,7 +1,5 @@
 extern crate enet;
 
-use std::fs::File;
-use std::io::Write;
 use std::net::Ipv4Addr;
 use std::time::Duration;
 
@@ -46,11 +44,11 @@ fn main() -> anyhow::Result<()> {
             EventKind::Connect => println!("new connection!"),
             EventKind::Disconnect { .. } => println!("disconnect!"),
             EventKind::Receive {
-                channel_id,
+                channel_id: _channel_id,
                 ref packet,
             } => {
                 let data = packet.data();
-                println!("got packet on channel {}, size {}", channel_id, data.len());
+                //println!("got packet on channel {}, size {}", channel_id, data.len());
 
                 let packet: Result<gdmp::Packet, DecodeError> = prost::Message::decode(data);
                 let packet = match packet {
@@ -73,9 +71,9 @@ fn main() -> anyhow::Result<()> {
                 match packet {
                     PlayerJoin(PlayerJoinPacket {
                         room,
-                        visual: _visual,
+                        visual,
                     }) => {
-                        println!("player join packet - joined room {:?}", room.unwrap());
+                        println!("player join packet - joined room {:?} with player data {:?}", room.unwrap(), visual.unwrap());
                     }
                     PlayerMove(PlayerMovePacket {pos_p1, pos_p2}) => {
                         println!("player move packet - position {:?}, velocity {:?}", pos_p1.unwrap(), pos_p2.unwrap_or(Position::default()));
@@ -84,10 +82,6 @@ fn main() -> anyhow::Result<()> {
                         println!("UNIMPLEMENTED PACKET: {:#?}", packet);
                     }
                 }
-
-                // save to file
-                let mut file = File::create("test2")?;
-                file.write_all(data)?;
             }
         }
     }
