@@ -26,6 +26,24 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room) {
     players.players.push(player);
 
     for x in players.players.clone() {
+        // for each of these players, send a packet to the new player
+        // telling them that they joined
+        let gdmp_packet = crate::gdmp::Packet {
+            packet_type: 1,
+            packet: Some(crate::gdmp::packet::Packet::PlayerJoin(
+                crate::gdmp::PlayerJoinPacket {
+                    room: Some(room.clone()),
+                    visual: None,
+                    p_id: Some(peer_id_to_u64(x)),
+                },
+            )),
+        };
+
+        let data = gdmp_packet.encode_to_vec();
+
+        let packet = Packet::new(data, enet::PacketMode::ReliableSequenced).unwrap();
+        evnt.peer_mut().send_packet(packet, 0).unwrap();
+
         let peer = evnt.host.peer_mut_this_will_go_horribly_wrong_lmao(x);
 
         match peer {
