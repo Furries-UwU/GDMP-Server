@@ -9,6 +9,7 @@ edition = "2021"
 enet = { path = "./enet-rs" }
 anyhow = "1.0.71"
 prost = "0.11.9"
+lazy_static = "1.4.0"
 
 [build-dependencies]
 prost-build = "0.11.9"

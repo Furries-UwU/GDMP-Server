@@ -1,3 +1,6 @@
+mod manager;
+mod utils;
+
 extern crate enet;
 
 use std::net::Ipv4Addr;
@@ -12,8 +15,8 @@ pub mod gdmp {
     include!(concat!(env!("OUT_DIR"), "/gdmp.rs"));
 }
 
-use crate::gdmp::*;
 use crate::gdmp::packet::Packet::{PlayerJoin, PlayerMove};
+use crate::gdmp::*;
 
 fn main() -> anyhow::Result<()> {
     let enet = Enet::new().context("could not initialize ENet")?;
@@ -35,7 +38,7 @@ fn main() -> anyhow::Result<()> {
             .service(Duration::from_micros(1000))
             .context("service failed")?;
 
-        let evnt = match evnt {
+        let mut evnt = match evnt {
             Some(evnt) => evnt,
             None => continue,
         };
@@ -69,14 +72,27 @@ fn main() -> anyhow::Result<()> {
                 };
 
                 match packet {
-                    PlayerJoin(PlayerJoinPacket {
-                        room,
-                        visual,
-                    }) => {
-                        println!("player join packet - joined room {:?} with player data {:?}", room.unwrap(), visual.unwrap());
+                    PlayerJoin(PlayerJoinPacket { room, visual, p_id: _ }) => {
+                        let room = room.expect("waaeeee room is bad :(");
+                        println!(
+                            "player join packet - joined room {:?} with player data {:?}",
+                            room,
+                            visual.unwrap()
+                        );
+
+                        manager::add_player(&mut evnt, room);
                     }
-                    PlayerMove(PlayerMovePacket {pos_p1, pos_p2}) => {
-                        println!("player move packet - position {:?}, velocity {:?}", pos_p1.unwrap(), pos_p2.unwrap_or(Position::default()));
+                    PlayerMove(PlayerMovePacket { pos_p1, pos_p2, p_id: _ }) => {
+                        /*println!(
+                            "player move packet - position {:?}, velocity {:?}",
+                            pos_p1.unwrap(),
+                            pos_p2.unwrap_or(Position::default())
+                        );*/
+                        manager::handle_player_move(
+                            &mut evnt,
+                            pos_p1.unwrap_or(Position::default()),
+                            pos_p2.unwrap_or(Position::default()),
+                        );
                     }
                     _ => {
                         println!("UNIMPLEMENTED PACKET: {:#?}", packet);
