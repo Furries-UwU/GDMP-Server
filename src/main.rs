@@ -77,21 +77,24 @@ fn main() -> anyhow::Result<()> {
                         println!(
                             "player join packet - joined room {:?} with player data {:?}",
                             room,
-                            visual.unwrap()
+                            visual
                         );
 
-                        manager::add_player(&mut evnt, room);
+                        manager::add_player(&mut evnt, room, visual.unwrap());
                     }
-                    PlayerMove(PlayerMovePacket { pos_p1, pos_p2, p_id: _ }) => {
-                        /*println!(
-                            "player move packet - position {:?}, velocity {:?}",
-                            pos_p1.unwrap(),
-                            pos_p2.unwrap_or(Position::default())
-                        );*/
+                    PlayerMove(PlayerMovePacket { pos_p1, pos_p2, p_id: _, gamemode_p1, gamemode_p2 }) => {
+                        println!(
+                            "player move packet - pos1 {:?}, pos2 {:?}",
+                            &pos_p1,
+                            &pos_p2
+                        );
+
                         manager::handle_player_move(
                             &mut evnt,
                             pos_p1.unwrap_or(Position::default()),
                             pos_p2.unwrap_or(Position::default()),
+                            gamemode_p1,
+                            gamemode_p2,
                         );
                     }
                     _ => {

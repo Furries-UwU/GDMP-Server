@@ -1,4 +1,4 @@
-use crate::gdmp::{Position, Room};
+use crate::gdmp::{PlayerVisuals, Position, Room};
 use crate::utils::{HashableRoom, Players};
 use enet::{Event, Packet, PeerID};
 use lazy_static::lazy_static;
@@ -12,7 +12,7 @@ lazy_static! {
     pub static ref ROOMS: Mutex<HashMap<HashableRoom, Players>> = Mutex::new(HashMap::new());
 }
 
-pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room) {
+pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, visual: PlayerVisuals) {
     let player = evnt.peer_id();
 
     let mut rooms = ROOMS.lock().unwrap();
@@ -58,7 +58,7 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room) {
                     packet: Some(crate::gdmp::packet::Packet::PlayerJoin(
                         crate::gdmp::PlayerJoinPacket {
                             room: Some(room.clone()),
-                            visual: None,
+                            visual: Some(visual.clone()),
                             p_id: Some(peer_id_to_u64(player)),
                         },
                     )),
@@ -91,7 +91,7 @@ fn peer_id_to_u64(peer_id: PeerID) -> u64 {
     res
 }
 
-pub fn handle_player_move<T>(evnt: &mut Event<'_, T>, pos_p1: Position, pos_p2: Position) {
+pub fn handle_player_move<T>(evnt: &mut Event<'_, T>, pos_p1: Position, pos_p2: Position, gamemode_p1: i32, gamemode_p2: i32) {
     let player = evnt.peer_id();
 
     let players_for_room = PLAYERS_FOR_ROOM.lock().unwrap();
@@ -118,6 +118,8 @@ pub fn handle_player_move<T>(evnt: &mut Event<'_, T>, pos_p1: Position, pos_p2: 
                                         crate::gdmp::PlayerMovePacket {
                                             pos_p1: Some(pos_p1.clone()),
                                             pos_p2: Some(pos_p2.clone()),
+                                            gamemode_p1,
+                                            gamemode_p2,
                                             p_id: Some(peer_id_to_u64(player)),
                                         },
                                     )),
