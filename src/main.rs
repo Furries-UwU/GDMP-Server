@@ -15,7 +15,7 @@ pub mod gdmp {
     include!(concat!(env!("OUT_DIR"), "/gdmp.rs"));
 }
 
-use crate::gdmp::packet::Packet::{PlayerJoin, PlayerMove, PlayerLeave};
+use crate::gdmp::packet::Packet::{PlayerJoin, PlayerLeave, PlayerMove};
 use crate::gdmp::*;
 use crate::utils::{HashableRoom, Players};
 
@@ -48,29 +48,39 @@ fn main() -> anyhow::Result<()> {
             EventKind::Connect => println!("new connection!"),
             EventKind::Disconnect { .. } => {
                 let mut rooms = manager::ROOMS.lock().unwrap();
-                let h = rooms.iter_mut().filter(|(_, v)| v.players.iter().any(|p| p.peer_id == evnt.peer_id())).collect::<Vec<(&HashableRoom, &mut Players)>>();
+                let h = rooms
+                    .iter_mut()
+                    .filter(|(_, v)| v.players.iter().any(|p| p.peer_id == evnt.peer_id()))
+                    .collect::<Vec<(&HashableRoom, &mut Players)>>();
 
                 for value in h {
                     value.1.players.retain(|p| p.peer_id != evnt.peer_id());
 
                     for dst_player in &value.1.players {
-                        match evnt.host.peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id) {
+                        match evnt
+                            .host
+                            .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
+                        {
                             None => continue,
                             Some(dst_peer) => {
-                                if dst_peer.state() != PeerState::Connected || evnt.peer_id() == dst_player.peer_id {
+                                if dst_peer.state() != PeerState::Connected
+                                    || evnt.peer_id() == dst_player.peer_id
+                                {
                                     continue;
                                 }
 
                                 let gdmp_packet = gdmp::Packet {
-                                    packet: Some(PlayerLeave(
-                                        PlayerLeavePacket {
-                                            room: Some(<Room>::from(value.0)),
-                                            p_id: Some(utils::peer_id_to_u64(evnt.peer_id())),
-                                        },
-                                    )),
+                                    packet: Some(PlayerLeave(PlayerLeavePacket {
+                                        room: Some(<Room>::from(value.0)),
+                                        p_id: Some(utils::peer_id_to_u64(evnt.peer_id())),
+                                    })),
                                 };
 
-                                let packet = enet::Packet::new(gdmp_packet.encode_to_vec(), PacketMode::ReliableSequenced).unwrap();
+                                let packet = enet::Packet::new(
+                                    gdmp_packet.encode_to_vec(),
+                                    PacketMode::ReliableSequenced,
+                                )
+                                .unwrap();
                                 dst_peer.send_packet(packet, 0).unwrap();
                             }
                         }
@@ -83,7 +93,7 @@ fn main() -> anyhow::Result<()> {
 
                 rooms.retain(|_, v| v.players.len() != 0);
                 println!("disconnect!");
-            },
+            }
             EventKind::Receive {
                 channel_id: _channel_id,
                 ref packet,
@@ -91,7 +101,7 @@ fn main() -> anyhow::Result<()> {
                 let data = packet.data();
                 //println!("got packet on channel {}, size {}", channel_id, data.len());
 
-                let packet: Result<gdmp::Packet, DecodeError> = prost::Message::decode(data);
+                let packet: Result<gdmp::Packet, DecodeError> = Message::decode(data);
                 let packet = match packet {
                     Ok(packet) => packet,
                     Err(err) => {
@@ -110,17 +120,26 @@ fn main() -> anyhow::Result<()> {
                 };
 
                 match packet {
-                    PlayerJoin(PlayerJoinPacket { room, visual, p_id: _ }) => {
+                    PlayerJoin(PlayerJoinPacket {
+                        room,
+                        visual,
+                        p_id: _,
+                    }) => {
                         let room = room.expect("waaeeee room is bad :(");
                         println!(
                             "player join packet - joined room {:?} with player data {:?}",
-                            room,
-                            visual
+                            room, visual
                         );
 
                         manager::add_player(&mut evnt, room, visual.unwrap());
                     }
-                    PlayerMove(PlayerMovePacket { pos_p1, pos_p2, p_id: _, gamemode_p1, gamemode_p2 }) => {
+                    PlayerMove(PlayerMovePacket {
+                        pos_p1,
+                        pos_p2,
+                        p_id: _,
+                        gamemode_p1,
+                        gamemode_p2,
+                    }) => {
                         /*
                         println!(
                             "player move packet - pos1 {:?}, pos2 {:?}",

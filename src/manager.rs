@@ -1,11 +1,11 @@
 use crate::gdmp::{PlayerVisuals, Position, Room};
+use crate::utils;
 use crate::utils::{HashableRoom, Player, Players};
 use enet::{Event, Packet, PeerID};
 use lazy_static::lazy_static;
 use prost::Message;
 use std::collections::HashMap;
 use std::sync::Mutex;
-use crate::utils;
 
 lazy_static! {
     pub static ref PLAYERS_FOR_ROOM: Mutex<HashMap<PeerID, HashableRoom>> =
@@ -24,7 +24,10 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
     let mut players_for_room = PLAYERS_FOR_ROOM.lock().unwrap();
     players_for_room.insert(src_peer_id, room.clone().into());
 
-    players.players.push(Player { peer_id: src_peer_id, visual: src_visual.clone() });
+    players.players.push(Player {
+        peer_id: src_peer_id,
+        visual: src_visual.clone(),
+    });
 
     for dst_player in players.players.clone() {
         // for each of these players, send a packet to the new player
@@ -45,12 +48,16 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
         evnt.peer_mut().send_packet(packet, 0).unwrap();
 
         // send data to dst_player telling their client that src_player joined
-        let dst_peer = evnt.host.peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id);
+        let dst_peer = evnt
+            .host
+            .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id);
 
         match dst_peer {
             None => continue,
             Some(dst_peer) => {
-                if dst_peer.state() != enet::PeerState::Connected /*|| src_peer_id == dst_player.peer_id*/ {
+                if dst_peer.state() != enet::PeerState::Connected
+                /*|| src_peer_id == dst_player.peer_id*/
+                {
                     continue;
                 }
 
@@ -85,10 +92,15 @@ pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
     players_for_room.remove(&src_peer_id);
 
     for dst_player in players.players.clone() {
-        match evnt.host.peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id) {
+        match evnt
+            .host
+            .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
+        {
             None => continue,
             Some(dst_peer) => {
-                if dst_peer.state() != enet::PeerState::Connected || src_peer_id == dst_player.peer_id {
+                if dst_peer.state() != enet::PeerState::Connected
+                    || src_peer_id == dst_player.peer_id
+                {
                     continue;
                 }
 
@@ -101,7 +113,11 @@ pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
                     )),
                 };
 
-                let packet = Packet::new(gdmp_packet.encode_to_vec(), enet::PacketMode::ReliableSequenced).unwrap();
+                let packet = Packet::new(
+                    gdmp_packet.encode_to_vec(),
+                    enet::PacketMode::ReliableSequenced,
+                )
+                .unwrap();
                 dst_peer.send_packet(packet, 0).unwrap();
             }
         }
@@ -115,7 +131,13 @@ pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
     }
 }
 
-pub fn handle_player_move<T>(evnt: &mut Event<'_, T>, pos_p1: Position, pos_p2: Position, gamemode_p1: i32, gamemode_p2: i32) {
+pub fn handle_player_move<T>(
+    evnt: &mut Event<'_, T>,
+    pos_p1: Position,
+    pos_p2: Position,
+    gamemode_p1: i32,
+    gamemode_p2: i32,
+) {
     let src_peer_id = evnt.peer_id();
 
     let players_for_room = PLAYERS_FOR_ROOM.lock().unwrap();
@@ -127,10 +149,14 @@ pub fn handle_player_move<T>(evnt: &mut Event<'_, T>, pos_p1: Position, pos_p2: 
             match rooms.get(room) {
                 Some(players) => {
                     for dst_player in &players.players {
-
-                        match evnt.host.peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id) {
+                        match evnt
+                            .host
+                            .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
+                        {
                             Some(dst_peer) => {
-                                if dst_peer.state() != enet::PeerState::Connected /*|| src_peer_id == dst_player.peer_id*/ {
+                                if dst_peer.state() != enet::PeerState::Connected
+                                /*|| src_peer_id == dst_player.peer_id*/
+                                {
                                     continue;
                                 }
 
