@@ -16,6 +16,14 @@ impl From<Room> for HashableRoom {
     }
 }
 
+impl From<&HashableRoom> for Room {
+    fn from(room: &HashableRoom) -> Self {
+        Self {
+            level_id: room.level_id,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Player {
     pub peer_id: PeerID,
@@ -25,4 +33,13 @@ pub struct Player {
 // this is only a struct to make code more readable
 pub struct Players {
     pub players: Vec<Player>,
+}
+
+// i hope this is actually unique and i didn't fuck it up
+pub(crate) fn peer_id_to_u64(peer_id: PeerID) -> u64 {
+    let a = peer_id.index as u32;
+    let b = peer_id.generation as u32;
+
+    let res = (a as u64) << 32 | b as u64;
+    res
 }

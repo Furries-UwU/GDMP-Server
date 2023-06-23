@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use anyhow::Context;
 use enet::*;
-use prost::DecodeError;
+use prost::{DecodeError, Message};
 
 // protocol stuff
 pub mod gdmp {
@@ -17,6 +17,7 @@ pub mod gdmp {
 
 use crate::gdmp::packet::Packet::{PlayerJoin, PlayerMove, PlayerLeave};
 use crate::gdmp::*;
+use crate::utils::{HashableRoom, Players};
 
 fn main() -> anyhow::Result<()> {
     let enet = Enet::new().context("could not initialize ENet")?;
@@ -45,7 +46,44 @@ fn main() -> anyhow::Result<()> {
 
         match evnt.kind() {
             EventKind::Connect => println!("new connection!"),
-            EventKind::Disconnect { .. } => println!("disconnect!"),
+            EventKind::Disconnect { .. } => {
+                let mut rooms = manager::ROOMS.lock().unwrap();
+                let h = rooms.iter_mut().filter(|(_, v)| v.players.iter().any(|p| p.peer_id == evnt.peer_id())).collect::<Vec<(&HashableRoom, &mut Players)>>();
+
+                for value in h {
+                    value.1.players.retain(|p| p.peer_id != evnt.peer_id());
+
+                    for dst_player in &value.1.players {
+                        match evnt.host.peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id) {
+                            None => continue,
+                            Some(dst_peer) => {
+                                if dst_peer.state() != PeerState::Connected || evnt.peer_id() == dst_player.peer_id {
+                                    continue;
+                                }
+
+                                let gdmp_packet = gdmp::Packet {
+                                    packet: Some(PlayerLeave(
+                                        PlayerLeavePacket {
+                                            room: Some(<Room>::from(value.0)),
+                                            p_id: Some(utils::peer_id_to_u64(evnt.peer_id())),
+                                        },
+                                    )),
+                                };
+
+                                let packet = enet::Packet::new(gdmp_packet.encode_to_vec(), PacketMode::ReliableSequenced).unwrap();
+                                dst_peer.send_packet(packet, 0).unwrap();
+                            }
+                        }
+                    }
+
+                    if value.1.players.len() == 0 {
+                        println!("removing room {:?} because it's empty", value.0);
+                    }
+                }
+
+                rooms.retain(|_, v| v.players.len() != 0);
+                println!("disconnect!");
+            },
             EventKind::Receive {
                 channel_id: _channel_id,
                 ref packet,

@@ -5,6 +5,7 @@ use lazy_static::lazy_static;
 use prost::Message;
 use std::collections::HashMap;
 use std::sync::Mutex;
+use crate::utils;
 
 lazy_static! {
     pub static ref PLAYERS_FOR_ROOM: Mutex<HashMap<PeerID, HashableRoom>> =
@@ -33,7 +34,7 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
                 crate::gdmp::PlayerJoinPacket {
                     room: Some(room.clone()),
                     visual: Some(dst_player.visual),
-                    p_id: Some(peer_id_to_u64(dst_player.peer_id)),
+                    p_id: Some(utils::peer_id_to_u64(dst_player.peer_id)),
                 },
             )),
         };
@@ -58,7 +59,7 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
                         crate::gdmp::PlayerJoinPacket {
                             room: Some(room.clone()),
                             visual: Some(src_visual.clone()),
-                            p_id: Some(peer_id_to_u64(src_peer_id)),
+                            p_id: Some(utils::peer_id_to_u64(src_peer_id)),
                         },
                     )),
                 };
@@ -95,7 +96,7 @@ pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
                     packet: Some(crate::gdmp::packet::Packet::PlayerLeave(
                         crate::gdmp::PlayerLeavePacket {
                             room: Some(room.clone()),
-                            p_id: Some(peer_id_to_u64(src_peer_id)),
+                            p_id: Some(utils::peer_id_to_u64(src_peer_id)),
                         },
                     )),
                 };
@@ -112,15 +113,6 @@ pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
         println!("removing room {:?} because it's empty", room);
         rooms.remove(&room.into());
     }
-}
-
-// i hope this is actually unique and i didn't fuck it up
-fn peer_id_to_u64(peer_id: PeerID) -> u64 {
-    let a = peer_id.index as u32;
-    let b = peer_id.generation as u32;
-
-    let res = (a as u64) << 32 | b as u64;
-    res
 }
 
 pub fn handle_player_move<T>(evnt: &mut Event<'_, T>, pos_p1: Position, pos_p2: Position, gamemode_p1: i32, gamemode_p2: i32) {
@@ -150,7 +142,7 @@ pub fn handle_player_move<T>(evnt: &mut Event<'_, T>, pos_p1: Position, pos_p2: 
                                             pos_p2: Some(pos_p2.clone()),
                                             gamemode_p1,
                                             gamemode_p2,
-                                            p_id: Some(peer_id_to_u64(src_peer_id)),
+                                            p_id: Some(utils::peer_id_to_u64(src_peer_id)),
                                         },
                                     )),
                                 };
