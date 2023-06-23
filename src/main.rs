@@ -86,12 +86,12 @@ fn main() -> anyhow::Result<()> {
                         }
                     }
 
-                    if value.1.players.len() == 0 {
+                    if value.1.players.is_empty() {
                         println!("removing room {:?} because it's empty", value.0);
                     }
                 }
 
-                rooms.retain(|_, v| v.players.len() != 0);
+                rooms.retain(|_, v| !v.players.is_empty());
                 println!("disconnect!");
             }
             EventKind::Receive {

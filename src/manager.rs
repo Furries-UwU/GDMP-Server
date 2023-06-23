@@ -125,7 +125,7 @@ pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
 
     players.players.retain(|x| x.peer_id != src_peer_id);
 
-    if players.players.len() == 0 {
+    if players.players.is_empty() {
         println!("removing room {:?} because it's empty", room);
         rooms.remove(&room.into());
     }
@@ -142,52 +142,41 @@ pub fn handle_player_move<T>(
 
     let players_for_room = PLAYERS_FOR_ROOM.lock().unwrap();
     let room = players_for_room.get(&src_peer_id);
-    match room {
-        Some(room) => {
-            let rooms = ROOMS.lock().unwrap();
+    if let Some(room) = room {
+        let rooms = ROOMS.lock().unwrap();
 
-            match rooms.get(room) {
-                Some(players) => {
-                    for dst_player in &players.players {
-                        match evnt
-                            .host
-                            .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
-                        {
-                            Some(dst_peer) => {
-                                if dst_peer.state() != enet::PeerState::Connected
-                                /*|| src_peer_id == dst_player.peer_id*/
-                                {
-                                    continue;
-                                }
-
-                                let gdmp_packet = crate::gdmp::Packet {
-                                    /* todo: we need a diff packet struct for this to indicate player ids */
-                                    packet: Some(crate::gdmp::packet::Packet::PlayerMove(
-                                        crate::gdmp::PlayerMovePacket {
-                                            pos_p1: Some(pos_p1.clone()),
-                                            pos_p2: Some(pos_p2.clone()),
-                                            gamemode_p1,
-                                            gamemode_p2,
-                                            p_id: Some(utils::peer_id_to_u64(src_peer_id)),
-                                        },
-                                    )),
-                                };
-
-                                let data = gdmp_packet.encode_to_vec();
-
-                                let packet =
-                                    Packet::new(data, enet::PacketMode::UnreliableSequenced)
-                                        .unwrap();
-
-                                dst_peer.send_packet(packet, 0).unwrap();
-                            }
-                            None => {}
-                        }
+        if let Some(players) = rooms.get(room) {
+            for dst_player in &players.players {
+                if let Some(dst_peer) = evnt
+                    .host
+                    .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
+                {
+                    if dst_peer.state() != enet::PeerState::Connected
+                    /*|| src_peer_id == dst_player.peer_id*/
+                    {
+                        continue;
                     }
+
+                    let gdmp_packet = crate::gdmp::Packet {
+                        /* todo: we need a diff packet struct for this to indicate player ids */
+                        packet: Some(crate::gdmp::packet::Packet::PlayerMove(
+                            crate::gdmp::PlayerMovePacket {
+                                pos_p1: Some(pos_p1.clone()),
+                                pos_p2: Some(pos_p2.clone()),
+                                gamemode_p1,
+                                gamemode_p2,
+                                p_id: Some(utils::peer_id_to_u64(src_peer_id)),
+                            },
+                        )),
+                    };
+
+                    let data = gdmp_packet.encode_to_vec();
+
+                    let packet = Packet::new(data, enet::PacketMode::UnreliableSequenced).unwrap();
+
+                    dst_peer.send_packet(packet, 0).unwrap();
                 }
-                None => {}
             }
         }
-        None => {}
     }
 }
