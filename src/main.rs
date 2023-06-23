@@ -22,7 +22,7 @@ use crate::utils::{HashableRoom, Players};
 fn main() -> anyhow::Result<()> {
     let enet = Enet::new().context("could not initialize ENet")?;
 
-    let local_addr = Address::new(Ipv4Addr::LOCALHOST, 34154);
+    let local_addr = Address::new(Ipv4Addr::from([0, 0, 0, 0]), 34154);
 
     let mut host = enet
         .create_host::<()>(
