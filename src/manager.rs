@@ -158,7 +158,6 @@ pub fn handle_player_move<T>(
                     }
 
                     let gdmp_packet = crate::gdmp::Packet {
-                        /* todo: we need a diff packet struct for this to indicate player ids */
                         packet: Some(crate::gdmp::packet::Packet::PlayerMove(
                             crate::gdmp::PlayerMovePacket {
                                 pos_p1: Some(pos_p1.clone()),
