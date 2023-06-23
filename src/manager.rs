@@ -56,7 +56,7 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
             None => continue,
             Some(dst_peer) => {
                 if dst_peer.state() != enet::PeerState::Connected
-                /*|| src_peer_id == dst_player.peer_id*/
+                    || src_peer_id == dst_player.peer_id
                 {
                     continue;
                 }
@@ -152,7 +152,7 @@ pub fn handle_player_move<T>(
                     .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
                 {
                     if dst_peer.state() != enet::PeerState::Connected
-                    /*|| src_peer_id == dst_player.peer_id*/
+                        || src_peer_id == dst_player.peer_id
                     {
                         continue;
                     }
