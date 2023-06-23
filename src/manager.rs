@@ -87,7 +87,6 @@ fn peer_id_to_u64(peer_id: PeerID) -> u64 {
     let b = peer_id.generation as u32;
 
     let res = (a as u64) << 32 | b as u64;
-    println!("peer id to u64: {}", res);
     res
 }
 
@@ -103,7 +102,6 @@ pub fn handle_player_move<T>(evnt: &mut Event<'_, T>, pos_p1: Position, pos_p2: 
             match players {
                 Some(players) => {
                     for peer_id in &players.players {
-                        println!("player: {:?}", peer_id);
                         let peer = evnt.host.peer_mut_this_will_go_horribly_wrong_lmao(*peer_id);
                         match peer {
                             Some(peer) => {

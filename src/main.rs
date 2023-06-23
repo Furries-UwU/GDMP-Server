@@ -83,11 +83,13 @@ fn main() -> anyhow::Result<()> {
                         manager::add_player(&mut evnt, room, visual.unwrap());
                     }
                     PlayerMove(PlayerMovePacket { pos_p1, pos_p2, p_id: _, gamemode_p1, gamemode_p2 }) => {
+                        /*
                         println!(
                             "player move packet - pos1 {:?}, pos2 {:?}",
                             &pos_p1,
                             &pos_p2
                         );
+                        */
 
                         manager::handle_player_move(
                             &mut evnt,
