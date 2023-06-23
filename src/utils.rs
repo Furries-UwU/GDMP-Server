@@ -1,4 +1,4 @@
-use crate::gdmp::Room;
+use crate::gdmp::{PlayerVisuals, Room};
 use enet::PeerID;
 
 // this is pretty much exactly the same as crate::gdmp::Room
@@ -16,7 +16,13 @@ impl From<Room> for HashableRoom {
     }
 }
 
+#[derive(Clone)]
+pub struct Player {
+    pub peer_id: PeerID,
+    pub visual: PlayerVisuals,
+}
+
 // this is only a struct to make code more readable
 pub struct Players {
-    pub players: Vec<PeerID>,
+    pub players: Vec<Player>,
 }
