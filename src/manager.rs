@@ -72,12 +72,41 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
     }
 }
 
-pub fn remove_player(room: Room, player: PeerID) {
+pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
+    let src_peer_id = evnt.peer_id();
+
     let mut rooms = ROOMS.lock().unwrap();
     let players = rooms.entry(room.clone().into()).or_insert(Players {
         players: Vec::new(),
     });
-    players.players.retain(|x| x.peer_id != player);
+
+    let mut players_for_room = PLAYERS_FOR_ROOM.lock().unwrap();
+    players_for_room.remove(&src_peer_id);
+
+    for dst_player in players.players.clone() {
+        match evnt.host.peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id) {
+            None => continue,
+            Some(dst_peer) => {
+                if dst_peer.state() != enet::PeerState::Connected || src_peer_id == dst_player.peer_id {
+                    continue;
+                }
+
+                let gdmp_packet = crate::gdmp::Packet {
+                    packet: Some(crate::gdmp::packet::Packet::PlayerLeave(
+                        crate::gdmp::PlayerLeavePacket {
+                            room: Some(room.clone()),
+                            p_id: Some(peer_id_to_u64(src_peer_id)),
+                        },
+                    )),
+                };
+
+                let packet = Packet::new(gdmp_packet.encode_to_vec(), enet::PacketMode::ReliableSequenced).unwrap();
+                dst_peer.send_packet(packet, 0).unwrap();
+            }
+        }
+    }
+
+    players.players.retain(|x| x.peer_id != src_peer_id);
 
     if players.players.len() == 0 {
         println!("removing room {:?} because it's empty", room);

@@ -15,7 +15,7 @@ pub mod gdmp {
     include!(concat!(env!("OUT_DIR"), "/gdmp.rs"));
 }
 
-use crate::gdmp::packet::Packet::{PlayerJoin, PlayerMove};
+use crate::gdmp::packet::Packet::{PlayerJoin, PlayerMove, PlayerLeave};
 use crate::gdmp::*;
 
 fn main() -> anyhow::Result<()> {
@@ -98,6 +98,10 @@ fn main() -> anyhow::Result<()> {
                             gamemode_p1,
                             gamemode_p2,
                         );
+                    }
+                    PlayerLeave(PlayerLeavePacket { room, p_id: _ }) => {
+                        let room = room.expect("bad room :(");
+                        manager::remove_player(&mut evnt, room);
                     }
                     _ => {
                         println!("UNIMPLEMENTED PACKET: {:#?}", packet);
