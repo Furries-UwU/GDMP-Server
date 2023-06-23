@@ -29,7 +29,6 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
         // for each of these players, send a packet to the new player
         // telling them that they joined (since they were already in the room)
         let gdmp_packet = crate::gdmp::Packet {
-            packet_type: 1,
             packet: Some(crate::gdmp::packet::Packet::PlayerJoin(
                 crate::gdmp::PlayerJoinPacket {
                     room: Some(room.clone()),
@@ -55,7 +54,6 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
                 }
 
                 let gdmp_packet = crate::gdmp::Packet {
-                    packet_type: 1,
                     packet: Some(crate::gdmp::packet::Packet::PlayerJoin(
                         crate::gdmp::PlayerJoinPacket {
                             room: Some(room.clone()),
@@ -116,7 +114,6 @@ pub fn handle_player_move<T>(evnt: &mut Event<'_, T>, pos_p1: Position, pos_p2: 
                                 }
 
                                 let gdmp_packet = crate::gdmp::Packet {
-                                    packet_type: 2,
                                     /* todo: we need a diff packet struct for this to indicate player ids */
                                     packet: Some(crate::gdmp::packet::Packet::PlayerMove(
                                         crate::gdmp::PlayerMovePacket {
