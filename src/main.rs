@@ -37,13 +37,13 @@ fn main() -> anyhow::Result<()> {
 
     let enet = Enet::new().context("could not initialize ENet")?;
 
-    let addr = args
-        .ip
-        .as_str()
-        .parse::<Ipv4Addr>()
-        .unwrap_or(Ipv4Addr::new(0, 0, 0, 0));
-
-    let local_addr = Address::new(addr, args.port);
+    let local_addr = Address::new(
+        args.ip
+            .as_str()
+            .parse::<Ipv4Addr>()
+            .unwrap_or(Ipv4Addr::new(0, 0, 0, 0)),
+        args.port,
+    );
 
     let mut host = enet
         .create_host::<()>(
@@ -59,7 +59,11 @@ fn main() -> anyhow::Result<()> {
         )
         .context("could not create host")?;
 
-    println!("Server listening on {}:{}!", addr, args.port);
+    println!(
+        "Server listening on {}:{}!",
+        local_addr.ip(),
+        local_addr.port()
+    );
 
     loop {
         let evnt = host
