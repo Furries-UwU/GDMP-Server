@@ -7,6 +7,7 @@ use std::net::Ipv4Addr;
 use std::time::Duration;
 
 use anyhow::Context;
+use clap::Parser;
 use enet::*;
 use prost::{DecodeError, Message};
 
@@ -19,20 +20,46 @@ use crate::gdmp::packet::Packet::{PlayerJoin, PlayerLeave, PlayerMove};
 use crate::gdmp::*;
 use crate::utils::{HashableRoom, Players};
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// The port to run the server on
+    #[arg(short, long, default_value_t = 34154)]
+    port: u16,
+
+    // The ip to run the server on
+    #[arg(short, long, default_value_t = String::from("0.0.0.0"))]
+    ip: String,
+}
+
 fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
     let enet = Enet::new().context("could not initialize ENet")?;
 
-    let local_addr = Address::new(Ipv4Addr::from([0, 0, 0, 0]), 34154);
+    let addr = args
+        .ip
+        .as_str()
+        .parse::<Ipv4Addr>()
+        .unwrap_or(Ipv4Addr::new(0, 0, 0, 0));
+
+    let local_addr = Address::new(addr, args.port);
 
     let mut host = enet
         .create_host::<()>(
             Some(&local_addr),
-            10,
+            4095,
+            // Consider changing this to 1
+            // Unless we are making 1 channel per 1 level
             ChannelLimit::Maximum,
+            // Consider changing this to 64kb
             BandwidthLimit::Unlimited,
+            // Consider changing this to 64kb
             BandwidthLimit::Unlimited,
         )
         .context("could not create host")?;
+
+    println!("Server listening on {}:{}!", addr, args.port);
 
     loop {
         let evnt = host
