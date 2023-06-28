@@ -156,13 +156,20 @@ fn main() -> anyhow::Result<()> {
                         visual,
                         p_id: _,
                     }) => {
-                        let room = room.expect("waaeeee room is bad :(");
-                        println!(
-                            "player join packet - joined room {:?} with player data {:?}",
-                            room, visual
-                        );
+                        match room {
+                            None => {
+                                eprintln!("invalid room");
+                                continue;
+                            }
+                            Some(room) => {
+                                println!(
+                                    "player join packet - joined room {:?} with player data {:?}",
+                                    room, visual
+                                );
 
-                        manager::add_player(&mut evnt, room, visual.unwrap());
+                                manager::add_player(&mut evnt, room, visual.unwrap());
+                            },
+                        };
                     }
                     PlayerMove(PlayerMovePacket {
                         pos_p1,
@@ -188,8 +195,15 @@ fn main() -> anyhow::Result<()> {
                         );
                     }
                     PlayerLeave(PlayerLeavePacket { room, p_id: _ }) => {
-                        let room = room.expect("bad room :(");
-                        manager::remove_player(&mut evnt, room);
+                        match room {
+                            None => {
+                                eprintln!("invalid room");
+                                continue;
+                            }
+                            Some(room) => {
+                                manager::remove_player(&mut evnt, room);
+                            },
+                        };
                     }
                     _ => {
                         println!("UNIMPLEMENTED PACKET: {:#?}", packet);
