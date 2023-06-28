@@ -36,6 +36,7 @@ pub struct Players {
 }
 
 // i hope this is actually unique and i didn't fuck it up
+// don't forget about big endian / little endian
 pub(crate) fn peer_id_to_u64(peer_id: PeerID) -> u64 {
     let a = peer_id.index as u32;
     let b = peer_id.generation as u32;
