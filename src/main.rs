@@ -27,7 +27,7 @@ struct Args {
     #[arg(short, long, default_value_t = 34154)]
     port: u16,
 
-    // The ip to run the server on
+    /// The ip to run the server on
     #[arg(short, long, default_value_t = String::from("0.0.0.0"))]
     ip: String,
 }
