@@ -164,8 +164,8 @@ fn main() -> anyhow::Result<()> {
                             }
                             Some(room) => {
                                 println!(
-                                    "player join packet - joined room {:?} with player data {:?}",
-                                    room, visual
+                                    "player join: {} joined room {:?} with player data {:?}",
+                                    username, room, visual
                                 );
 
                                 manager::add_player(&mut evt, room, visual.unwrap(), username);
