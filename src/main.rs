@@ -66,36 +66,36 @@ fn main() -> anyhow::Result<()> {
     );
 
     loop {
-        let evnt = host
+        let evt = host
             .service(Duration::from_micros(1000))
             .context("service failed")?;
 
-        let mut evnt = match evnt {
-            Some(evnt) => evnt,
+        let mut evt = match evt {
+            Some(evt) => evt,
             None => continue,
         };
 
-        match evnt.kind() {
+        match evt.kind() {
             EventKind::Connect => println!("new connection!"),
             EventKind::Disconnect { .. } => {
                 let mut rooms = manager::ROOMS.lock().unwrap();
                 let h = rooms
                     .iter_mut()
-                    .filter(|(_, v)| v.players.iter().any(|p| p.peer_id == evnt.peer_id()))
+                    .filter(|(_, v)| v.players.iter().any(|p| p.peer_id == evt.peer_id()))
                     .collect::<Vec<(&HashableRoom, &mut Players)>>();
 
                 for value in h {
-                    value.1.players.retain(|p| p.peer_id != evnt.peer_id());
+                    value.1.players.retain(|p| p.peer_id != evt.peer_id());
 
                     for dst_player in &value.1.players {
-                        match evnt
+                        match evt
                             .host
                             .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
                         {
                             None => continue,
                             Some(dst_peer) => {
                                 if dst_peer.state() != PeerState::Connected
-                                    || evnt.peer_id() == dst_player.peer_id
+                                    || evt.peer_id() == dst_player.peer_id
                                 {
                                     continue;
                                 }
@@ -103,7 +103,7 @@ fn main() -> anyhow::Result<()> {
                                 let gdmp_packet = gdmp::Packet {
                                     packet: Some(PlayerLeave(PlayerLeavePacket {
                                         room: Some(<Room>::from(value.0)),
-                                        p_id: Some(utils::peer_id_to_u64(evnt.peer_id())),
+                                        p_id: Some(utils::peer_id_to_u64(evt.peer_id())),
                                     })),
                                 };
 
@@ -167,7 +167,7 @@ fn main() -> anyhow::Result<()> {
                                     room, visual
                                 );
 
-                                manager::add_player(&mut evnt, room, visual.unwrap());
+                                manager::add_player(&mut evt, room, visual.unwrap());
                             },
                         };
                     }
@@ -187,7 +187,7 @@ fn main() -> anyhow::Result<()> {
                         */
 
                         manager::handle_player_move(
-                            &mut evnt,
+                            &mut evt,
                             pos_p1.unwrap_or(Position::default()),
                             pos_p2.unwrap_or(Position::default()),
                             gamemode_p1,
@@ -201,12 +201,12 @@ fn main() -> anyhow::Result<()> {
                                 continue;
                             }
                             Some(room) => {
-                                manager::remove_player(&mut evnt, room);
+                                manager::remove_player(&mut evt, room);
                             },
                         };
                     }
                     _ => {
-                        println!("UNIMPLEMENTED PACKET: {:#?}", packet);
+                        eprintln!("UNIMPLEMENTED PACKET: {:#?}", packet);
                     }
                 }
             }

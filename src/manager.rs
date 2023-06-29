@@ -13,8 +13,8 @@ lazy_static! {
     pub static ref ROOMS: Mutex<HashMap<HashableRoom, Players>> = Mutex::new(HashMap::new());
 }
 
-pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisuals) {
-    let src_peer_id = evnt.peer_id();
+pub fn add_player<T>(evt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisuals) {
+    let src_peer_id = evt.peer_id();
 
     let mut rooms = ROOMS.lock().unwrap();
     let players = rooms.entry(room.clone().into()).or_insert(Players {
@@ -45,10 +45,10 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
         let data = gdmp_packet.encode_to_vec();
 
         let packet = Packet::new(data, enet::PacketMode::ReliableSequenced).unwrap();
-        evnt.peer_mut().send_packet(packet, 0).unwrap();
+        evt.peer_mut().send_packet(packet, 0).unwrap();
 
         // send data to dst_player telling their client that src_player joined
-        let dst_peer = evnt
+        let dst_peer = evt
             .host
             .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id);
 
@@ -80,8 +80,8 @@ pub fn add_player<T>(evnt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisu
     }
 }
 
-pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
-    let src_peer_id = evnt.peer_id();
+pub fn remove_player<T>(evt: &mut Event<'_, T>, room: Room) {
+    let src_peer_id = evt.peer_id();
 
     let mut rooms = ROOMS.lock().unwrap();
     let players = rooms.entry(room.clone().into()).or_insert(Players {
@@ -92,7 +92,7 @@ pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
     players_for_room.remove(&src_peer_id);
 
     for dst_player in players.players.clone() {
-        match evnt
+        match evt
             .host
             .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
         {
@@ -132,13 +132,13 @@ pub fn remove_player<T>(evnt: &mut Event<'_, T>, room: Room) {
 }
 
 pub fn handle_player_move<T>(
-    evnt: &mut Event<'_, T>,
+    evt: &mut Event<'_, T>,
     pos_p1: Position,
     pos_p2: Position,
     gamemode_p1: i32,
     gamemode_p2: i32,
 ) {
-    let src_peer_id = evnt.peer_id();
+    let src_peer_id = evt.peer_id();
 
     let players_for_room = PLAYERS_FOR_ROOM.lock().unwrap();
     let room = players_for_room.get(&src_peer_id);
@@ -147,7 +147,7 @@ pub fn handle_player_move<T>(
 
         if let Some(players) = rooms.get(room) {
             for dst_player in &players.players {
-                if let Some(dst_peer) = evnt
+                if let Some(dst_peer) = evt
                     .host
                     .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
                 {
