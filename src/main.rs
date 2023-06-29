@@ -154,6 +154,7 @@ fn main() -> anyhow::Result<()> {
                     PlayerJoin(PlayerJoinPacket {
                         room,
                         visual,
+                        username,
                         p_id: _,
                     }) => {
                         match room {
@@ -167,7 +168,7 @@ fn main() -> anyhow::Result<()> {
                                     room, visual
                                 );
 
-                                manager::add_player(&mut evt, room, visual.unwrap());
+                                manager::add_player(&mut evt, room, visual.unwrap(), username);
                             },
                         };
                     }

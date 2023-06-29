@@ -27,6 +27,7 @@ impl From<&HashableRoom> for Room {
 #[derive(Clone)]
 pub struct Player {
     pub peer_id: PeerID,
+    pub username: String,
     pub visual: PlayerVisuals,
 }
 

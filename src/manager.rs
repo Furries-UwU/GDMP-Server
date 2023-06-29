@@ -13,7 +13,7 @@ lazy_static! {
     pub static ref ROOMS: Mutex<HashMap<HashableRoom, Players>> = Mutex::new(HashMap::new());
 }
 
-pub fn add_player<T>(evt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisuals) {
+pub fn add_player<T>(evt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisuals, src_username: String) {
     let src_peer_id = evt.peer_id();
 
     let mut rooms = ROOMS.lock().unwrap();
@@ -26,6 +26,7 @@ pub fn add_player<T>(evt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisua
 
     players.players.push(Player {
         peer_id: src_peer_id,
+        username: src_username.clone(),
         visual: src_visual.clone(),
     });
 
@@ -37,6 +38,7 @@ pub fn add_player<T>(evt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisua
                 crate::gdmp::PlayerJoinPacket {
                     room: Some(room.clone()),
                     visual: Some(dst_player.visual),
+                    username: dst_player.username.clone(),
                     p_id: Some(utils::peer_id_to_u64(dst_player.peer_id)),
                 },
             )),
@@ -66,6 +68,7 @@ pub fn add_player<T>(evt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisua
                         crate::gdmp::PlayerJoinPacket {
                             room: Some(room.clone()),
                             visual: Some(src_visual.clone()),
+                            username: src_username.clone(),
                             p_id: Some(utils::peer_id_to_u64(src_peer_id)),
                         },
                     )),
