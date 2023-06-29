@@ -13,7 +13,12 @@ lazy_static! {
     pub static ref ROOMS: Mutex<HashMap<HashableRoom, Players>> = Mutex::new(HashMap::new());
 }
 
-pub fn add_player<T>(evt: &mut Event<'_, T>, room: Room, src_visual: PlayerVisuals, src_username: String) {
+pub fn add_player<T>(
+    evt: &mut Event<'_, T>,
+    room: Room,
+    src_visual: PlayerVisuals,
+    src_username: String,
+) {
     let src_peer_id = evt.peer_id();
 
     let mut rooms = ROOMS.lock().unwrap();

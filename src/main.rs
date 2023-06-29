@@ -169,7 +169,7 @@ fn main() -> anyhow::Result<()> {
                                 );
 
                                 manager::add_player(&mut evt, room, visual.unwrap(), username);
-                            },
+                            }
                         };
                     }
                     PlayerMove(PlayerMovePacket {
@@ -203,7 +203,7 @@ fn main() -> anyhow::Result<()> {
                             }
                             Some(room) => {
                                 manager::remove_player(&mut evt, room);
-                            },
+                            }
                         };
                     }
                     _ => {
