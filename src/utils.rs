@@ -6,12 +6,14 @@ use enet::PeerID;
 #[derive(Hash, Eq, PartialEq, Debug)]
 pub struct HashableRoom {
     pub level_id: i32,
+    pub key: Option<String>,
 }
 
 impl From<Room> for HashableRoom {
     fn from(room: Room) -> Self {
         Self {
             level_id: room.level_id,
+            key: room.key,
         }
     }
 }
@@ -20,6 +22,7 @@ impl From<&HashableRoom> for Room {
     fn from(room: &HashableRoom) -> Self {
         Self {
             level_id: room.level_id,
+            key: room.key.clone(),
         }
     }
 }
