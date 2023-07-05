@@ -33,6 +33,10 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
+    unsafe {
+        println!("rooot!");
+    }
+    
     let args = Args::parse();
 
     let enet = Enet::new().context("could not initialize ENet")?;
