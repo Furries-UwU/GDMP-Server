@@ -94,6 +94,7 @@ fn main() -> anyhow::Result<()> {
                     for dst_player in &value.1.players {
                         match evt
                             .host
+                            // Consider changing this to `non_mutable_host_peer_mut`
                             .peer_mut_this_will_go_horribly_wrong_lmao(dst_player.peer_id)
                         {
                             None => continue,
