@@ -3,7 +3,7 @@ name = "gdmp-server"
 version = "0.1.0"
 edition = "2021"
 description = "BLAZING 🚀 fast (🚀🚀) and MEMORY 🦀 SAFE (🦀🦀) server 🚀 software 🦀🚀 for 🚀 GDMP"
-authors = ["rooot", "xhayper"]
+authors = ["rooot", "xhayperc"]
 repository = "https://github.com/Furries-UwU/GDMP-Server/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
