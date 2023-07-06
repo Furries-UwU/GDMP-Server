@@ -16,9 +16,7 @@ pub mod gdmp {
     include!(concat!(env!("OUT_DIR"), "/gdmp.rs"));
 }
 
-use crate::gdmp::packet::Packet::{
-    PlayerJoin, PlayerLeave, PlayerMove, PlayerRequestJoinRoom, PlayerRequestRoomList, RoomList,
-};
+use crate::gdmp::packet::Packet::*;
 use crate::gdmp::*;
 use crate::utils::{HashableRoom, Players};
 
