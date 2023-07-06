@@ -33,10 +33,6 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
-    unsafe {
-        println!("rooot!");
-    }
-
     let args = Args::parse();
 
     let enet = Enet::new().context("could not initialize ENet")?;
@@ -223,7 +219,7 @@ fn main() -> anyhow::Result<()> {
                         };
 
                         if room.pass.is_some()
-                            && (!pass.is_none()
+                            && (pass.is_some()
                                 || room.pass.as_ref().unwrap() != pass.as_ref().unwrap())
                         {
                             eprintln!("invalid password");
