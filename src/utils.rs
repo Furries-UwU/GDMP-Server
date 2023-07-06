@@ -5,15 +5,27 @@ use enet::PeerID;
 // but impls Hash and Eq
 #[derive(Hash, Eq, PartialEq, Debug)]
 pub struct HashableRoom {
-    pub level_id: i32,
-    pub key: Option<String>,
+    pub id: i32,
+    pub name: String,
+    pub player_amount: i32,
+    pub max_player: i32,
+    pub owner: String,
+    pub require_pass: bool,
+    pub level_id: Option<i32>,
+    pub pass: Option<String>
 }
 
 impl From<Room> for HashableRoom {
     fn from(room: Room) -> Self {
         Self {
+            id: room.id,
+            name: room.name,
+            player_amount: room.player_amount,
+            max_player: room.max_player,
+            owner: room.owner,
+            require_pass: room.require_pass,
             level_id: room.level_id,
-            key: room.key,
+            pass: None
         }
     }
 }
@@ -21,8 +33,13 @@ impl From<Room> for HashableRoom {
 impl From<&HashableRoom> for Room {
     fn from(room: &HashableRoom) -> Self {
         Self {
-            level_id: room.level_id,
-            key: room.key.clone(),
+            id: room.id,
+            name: room.name.clone(),
+            player_amount: room.player_amount,
+            max_player: room.max_player,
+            owner: room.owner.clone(),
+            require_pass: room.require_pass,
+            level_id: room.level_id
         }
     }
 }

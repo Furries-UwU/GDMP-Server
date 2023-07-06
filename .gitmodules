@@ -1,6 +1,6 @@
 [submodule "enet-rs"]
 	path = enet-rs
 	url = https://github.com/Furries-UwU/enet-rs
-[submodule "src/proto"]
-	path = src/proto
-	url = https://github.com/Furries-UwU/gdmp-proto
+[submodule "proto"]
+	path = proto
+	url = https://github.com/Furries-UwU/GDMP-Proto
