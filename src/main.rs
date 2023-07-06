@@ -16,7 +16,9 @@ pub mod gdmp {
     include!(concat!(env!("OUT_DIR"), "/gdmp.rs"));
 }
 
-use crate::gdmp::packet::Packet::{PlayerJoin, PlayerLeave, PlayerMove, PlayerRequestRoomList, RoomList};
+use crate::gdmp::packet::Packet::{
+    PlayerJoin, PlayerLeave, PlayerMove, PlayerRequestJoinRoom, PlayerRequestRoomList, RoomList,
+};
 use crate::gdmp::*;
 use crate::utils::{HashableRoom, Players};
 
@@ -210,6 +212,27 @@ fn main() -> anyhow::Result<()> {
                             }
                         };
                     }
+                    PlayerRequestJoinRoom(PlayerRequestJoinRoomPacket { id, pass }) => {
+                        let rooms = manager::ROOMS.lock().unwrap();
+
+                        let room = match rooms.keys().find(|room| room.id == id) {
+                            None => {
+                                eprintln!("room not found");
+                                continue;
+                            }
+                            Some(room) => room,
+                        };
+
+                        if room.pass.is_some()
+                            && (!pass.is_none()
+                                || room.pass.as_ref().unwrap() != pass.as_ref().unwrap())
+                        {
+                            eprintln!("invalid password");
+                            continue;
+                        }
+
+                        // TODO: Get player and add them to room
+                    }
                     PlayerRequestRoomList(PlayerRequestRoomListPacket {}) => {
                         let gdmp_packet = gdmp::Packet {
                             packet: Some(RoomList(RoomListPacket {
@@ -217,7 +240,7 @@ fn main() -> anyhow::Result<()> {
                                     .lock()
                                     .unwrap()
                                     .keys()
-                                    .map(|room| Room::from(room))
+                                    .map(Room::from)
                                     .collect(),
                                 p_id: Some(utils::peer_id_to_u64(evt.peer_id())),
                             })),
@@ -225,7 +248,8 @@ fn main() -> anyhow::Result<()> {
 
                         let data = gdmp_packet.encode_to_vec();
 
-                        let packet = enet::Packet::new(data, PacketMode::ReliableSequenced).unwrap();
+                        let packet =
+                            enet::Packet::new(data, PacketMode::ReliableSequenced).unwrap();
                         evt.peer_mut().send_packet(packet, 0).unwrap();
                     }
                     _ => {
