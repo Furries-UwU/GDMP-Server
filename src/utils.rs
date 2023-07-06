@@ -12,7 +12,7 @@ pub struct HashableRoom {
     pub owner: String,
     pub require_pass: bool,
     pub level_id: Option<i32>,
-    pub pass: Option<String>
+    pub pass: Option<String>,
 }
 
 impl From<Room> for HashableRoom {
@@ -25,7 +25,7 @@ impl From<Room> for HashableRoom {
             owner: room.owner,
             require_pass: room.require_pass,
             level_id: room.level_id,
-            pass: None
+            pass: None,
         }
     }
 }
@@ -39,7 +39,7 @@ impl From<&HashableRoom> for Room {
             max_player: room.max_player,
             owner: room.owner.clone(),
             require_pass: room.require_pass,
-            level_id: room.level_id
+            level_id: room.level_id,
         }
     }
 }

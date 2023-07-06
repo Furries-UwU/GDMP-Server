@@ -16,7 +16,7 @@ pub mod gdmp {
     include!(concat!(env!("OUT_DIR"), "/gdmp.rs"));
 }
 
-use crate::gdmp::packet::Packet::{PlayerJoin, PlayerLeave, PlayerMove};
+use crate::gdmp::packet::Packet::{PlayerJoin, PlayerLeave, PlayerMove, PlayerRequestRoomList, RoomList};
 use crate::gdmp::*;
 use crate::utils::{HashableRoom, Players};
 
@@ -36,7 +36,7 @@ fn main() -> anyhow::Result<()> {
     unsafe {
         println!("rooot!");
     }
-    
+
     let args = Args::parse();
 
     let enet = Enet::new().context("could not initialize ENet")?;
@@ -209,6 +209,24 @@ fn main() -> anyhow::Result<()> {
                                 manager::remove_player(&mut evt, room);
                             }
                         };
+                    }
+                    PlayerRequestRoomList(PlayerRequestRoomListPacket {}) => {
+                        let gdmp_packet = gdmp::Packet {
+                            packet: Some(RoomList(RoomListPacket {
+                                room: manager::ROOMS
+                                    .lock()
+                                    .unwrap()
+                                    .keys()
+                                    .map(|room| Room::from(room))
+                                    .collect(),
+                                p_id: Some(utils::peer_id_to_u64(evt.peer_id())),
+                            })),
+                        };
+
+                        let data = gdmp_packet.encode_to_vec();
+
+                        let packet = enet::Packet::new(data, PacketMode::ReliableSequenced).unwrap();
+                        evt.peer_mut().send_packet(packet, 0).unwrap();
                     }
                     _ => {
                         eprintln!("UNIMPLEMENTED PACKET: {:#?}", packet);
