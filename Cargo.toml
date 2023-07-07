@@ -9,10 +9,11 @@ repository = "https://github.com/Furries-UwU/GDMP-Server/"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-enet = { path = "./enet-rs" }
 anyhow = "1.0.71"
 prost = "0.11.9"
 clap = { version = "4.3.8", features = ["derive"] }
+zeromq = "0.3.3"
+tokio = { version = "1.29.1", features = ["full"] }
 
 [build-dependencies]
 prost-build = "0.11.9"
