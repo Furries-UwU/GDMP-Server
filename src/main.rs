@@ -6,7 +6,6 @@ use clap::Parser;
 use prost::{DecodeError, Message};
 use std::net::Ipv4Addr;
 use std::time::Duration;
-use zmq::*;
 
 // protocol stuff
 pub mod gdmp {
@@ -42,7 +41,7 @@ fn main() -> anyhow::Result<()> {
     let ctx = zmq::Context::new();
 
     let socket = ctx.socket(zmq::PUB).unwrap();
-    socket.connect("tcp://{}:{}", addr, args.port).unwrap();
+    socket.connect(format!("tcp://{}:{}", addr, args.port).as_str()).unwrap();
 
     // let mut socket = zeromq::PubSocket::new();
     // socket.bind(format!("tcp://{}:{}", addr, args.port).as_str());
