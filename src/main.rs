@@ -3,7 +3,6 @@ mod utils;
 
 use anyhow::Context;
 use clap::Parser;
-use fmt::*;
 use prost::{DecodeError, Message};
 use std::net::Ipv4Addr;
 use std::time::Duration;
