@@ -6,7 +6,7 @@ use clap::Parser;
 use prost::{DecodeError, Message};
 use std::net::Ipv4Addr;
 use std::time::Duration;
-use zeromq::*;
+use zmq::*;
 
 // protocol stuff
 pub mod gdmp {
@@ -29,7 +29,6 @@ struct Args {
     ip: String,
 }
 
-#[tokio::main]
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
@@ -40,8 +39,13 @@ fn main() -> anyhow::Result<()> {
         .unwrap_or(Ipv4Addr::new(0, 0, 0, 0))
         .to_string();
 
-    let mut socket = zeromq::PubSocket::new();
-    socket.bind(format!("tcp://{}:{}", addr, args.port).as_str());
+    let ctx = zmq::Context::new();
+
+    let socket = ctx.socket(zmq::PUB).unwrap();
+    socket.connect("tcp://{}:{}", addr, args.port).unwrap();
+
+    // let mut socket = zeromq::PubSocket::new();
+    // socket.bind(format!("tcp://{}:{}", addr, args.port).as_str());
 
     println!("Server listening on {}:{}!", addr, args.port);
     loop {}
