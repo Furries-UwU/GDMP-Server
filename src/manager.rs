@@ -2,15 +2,19 @@ use crate::gdmp::{PlayerVisuals, Position, Room};
 use crate::utils;
 use crate::utils::{HashableRoom, Player, Players};
 use enet::{Event, Packet, PeerID};
-use lazy_static::lazy_static;
 use prost::Message;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 
-lazy_static! {
-    pub static ref PLAYERS_FOR_ROOM: Mutex<HashMap<PeerID, HashableRoom>> =
-        Mutex::new(HashMap::new());
-    pub static ref ROOMS: Mutex<HashMap<HashableRoom, Players>> = Mutex::new(HashMap::new());
+pub static PLAYERS_FOR_ROOM: OnceLock<Mutex<HashMap<PeerID, HashableRoom>>> = OnceLock::new();
+pub static ROOMS: OnceLock<Mutex<HashMap<HashableRoom, Players>>> = OnceLock::new();
+
+pub fn get_players_for_room() -> &'static Mutex<HashMap<PeerID, HashableRoom>> {
+    PLAYERS_FOR_ROOM.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+pub fn get_rooms() -> &'static Mutex<HashMap<HashableRoom, Players>> {
+    ROOMS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 pub fn add_player<T>(
@@ -21,12 +25,12 @@ pub fn add_player<T>(
 ) {
     let src_peer_id = evt.peer_id();
 
-    let mut rooms = ROOMS.lock().unwrap();
+    let mut rooms = get_rooms().lock().unwrap();
     let players = rooms.entry(room.clone().into()).or_insert(Players {
         players: Vec::new(),
     });
 
-    let mut players_for_room = PLAYERS_FOR_ROOM.lock().unwrap();
+    let mut players_for_room = get_players_for_room().lock().unwrap();
     players_for_room.insert(src_peer_id, room.clone().into());
 
     players.players.push(Player {
@@ -91,12 +95,12 @@ pub fn add_player<T>(
 pub fn remove_player<T>(evt: &mut Event<'_, T>, room: Room) {
     let src_peer_id = evt.peer_id();
 
-    let mut rooms = ROOMS.lock().unwrap();
+    let mut rooms = get_rooms().lock().unwrap();
     let players = rooms.entry(room.clone().into()).or_insert(Players {
         players: Vec::new(),
     });
 
-    let mut players_for_room = PLAYERS_FOR_ROOM.lock().unwrap();
+    let mut players_for_room = get_players_for_room().lock().unwrap();
     players_for_room.remove(&src_peer_id);
 
     for dst_player in players.players.clone() {
@@ -148,10 +152,10 @@ pub fn handle_player_move<T>(
 ) {
     let src_peer_id = evt.peer_id();
 
-    let players_for_room = PLAYERS_FOR_ROOM.lock().unwrap();
+    let players_for_room = get_players_for_room().lock().unwrap();
     let room = players_for_room.get(&src_peer_id);
     if let Some(room) = room {
-        let rooms = ROOMS.lock().unwrap();
+        let rooms = get_rooms().lock().unwrap();
 
         if let Some(players) = rooms.get(room) {
             for dst_player in &players.players {

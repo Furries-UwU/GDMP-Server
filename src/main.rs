@@ -4,6 +4,7 @@ mod utils;
 extern crate enet;
 
 use std::net::Ipv4Addr;
+
 use std::time::Duration;
 
 use anyhow::Context;
@@ -78,7 +79,7 @@ fn main() -> anyhow::Result<()> {
         match evt.kind() {
             EventKind::Connect => println!("new connection!"),
             EventKind::Disconnect { .. } => {
-                let mut rooms = manager::ROOMS.lock().unwrap();
+                let mut rooms = manager::get_rooms().lock().unwrap();
                 let h = rooms
                     .iter_mut()
                     .filter(|(_, v)| v.players.iter().any(|p| p.peer_id == evt.peer_id()))
@@ -208,7 +209,7 @@ fn main() -> anyhow::Result<()> {
                         };
                     }
                     PlayerRequestJoinRoom(PlayerRequestJoinRoomPacket { id, pass }) => {
-                        let rooms = manager::ROOMS.lock().unwrap();
+                        let rooms = manager::get_rooms().lock().unwrap();
 
                         let room = match rooms.keys().find(|room| room.id == id) {
                             None => {
@@ -232,6 +233,8 @@ fn main() -> anyhow::Result<()> {
                         let gdmp_packet = gdmp::Packet {
                             packet: Some(RoomList(RoomListPacket {
                                 room: manager::ROOMS
+                                    .get()
+                                    .unwrap()
                                     .lock()
                                     .unwrap()
                                     .keys()
