@@ -1,5 +1,10 @@
 on: [push, pull_request]
+
 name: Clippy check
+
+permissions:
+    checks: write
+
 jobs:
   clippy_check:
     runs-on: ubuntu-latest
@@ -7,10 +12,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@1.7.1.1
         with:
-          toolchain: stable
           components: clippy
-      - uses: arduino/setup-protoc@v2
-      - run: cargo build
-      - run: cargo clippy --no-deps
+      - uses: auguwu/clippy-action@1.2.1
+        with:
+            token: ${{secrets.GITHUB_TOKEN}}
