@@ -7,7 +7,7 @@ use std::net::Ipv4Addr;
 
 use std::time::Duration;
 
-use anyhow::Context;
+use anyhow::{Result, Context};
 use clap::Parser;
 use enet::*;
 use prost::{DecodeError, Message};
@@ -33,7 +33,7 @@ struct Args {
     ip: String,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
 
     let enet = Enet::new().context("could not initialize ENet")?;
